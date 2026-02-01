@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract TicketNFT is ERC721, Ownable {
+contract TicketNFT is ERC721URIStorage, Ownable {
     enum TicketType { STANDARD, VIP, BACKSTAGE }
 
     struct TicketData {
@@ -30,13 +30,17 @@ contract TicketNFT is ERC721, Ownable {
     function mintTicket(
         address to,
         TicketType t,
-        uint256 value
+        uint256 value,
+        string memory uri
     ) external onlyOwner {
         require(balanceOf(to) < MAX_TICKETS_PER_WALLET, "Max tickets reached");
         require(block.timestamp >= lastTxAt[to] + COOLDOWN, "Cooldown not finished");
 
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
+
+        // IPFS tokenURI (ex: ipfs://CID)
+        _setTokenURI(tokenId, uri);
 
         TicketData storage d = ticketData[tokenId];
         d.ticketType = t;
@@ -45,14 +49,13 @@ contract TicketNFT is ERC721, Ownable {
         d.lastTransferAt = block.timestamp;
         d.mintedAt = block.timestamp;
 
-        // action enregistrée pour le destinataire du mint
         lastTxAt[to] = block.timestamp;
     }
 
     // OpenZeppelin v5: _update est le point central (mint/transfer/burn)
     function _update(address to, uint256 tokenId, address auth)
         internal
-        override
+        override(ERC721)
         returns (address from)
     {
         from = super._update(to, tokenId, auth);
@@ -68,12 +71,11 @@ contract TicketNFT is ERC721, Ownable {
         }
 
         // IMPORTANT: à ce stade, le solde de "to" a déjà été incrémenté par super._update
-        // donc la limite doit être <= MAX (et non < MAX)
         require(balanceOf(to) <= MAX_TICKETS_PER_WALLET, "Receiver max tickets reached");
 
         TicketData storage d = ticketData[tokenId];
 
-        // 1) Lock d'abord (sinon le test lock reçoit cooldown)
+        // 1) Lock d'abord
         require(block.timestamp >= d.mintedAt + LOCK_DURATION, "Ticket still locked");
 
         // 2) Cooldown ensuite (sur l'émetteur)
@@ -83,10 +85,30 @@ contract TicketNFT is ERC721, Ownable {
         d.previousOwners.push(from);
         d.lastTransferAt = block.timestamp;
 
-        // Cooldown appliqué aux deux parties (from et to)
+        // Cooldown appliqué aux deux parties
         lastTxAt[from] = block.timestamp;
         lastTxAt[to] = block.timestamp;
 
         return from;
+    }
+
+    // Requis avec ERC721URIStorage
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    // Requis avec ERC721URIStorage
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721URIStorage)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
