@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-
+import hre from "hardhat";
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("TicketNFT - Tests métiers", function () {
   async function deployFixture() {
@@ -16,17 +16,16 @@ it("Mint : un utilisateur ne peut pas avoir plus de 4 tickets", async () => {
 
   for (let i = 0; i < 4; i++) {
   if (i > 0) {
-    await ethers.provider.send("evm_increaseTime", [5 * 60]);
-    await ethers.provider.send("evm_mine", []);
+    await networkHelpers.time.increase(5 * 60);
+    await networkHelpers.mine();
   }
   await ticket.connect(owner).mintTicket(alice.address, 0, 100);
 }
 
   expect(await ticket.balanceOf(alice.address)).to.equal(4);
 
-  await ethers.provider.send("evm_increaseTime", [5 * 60]);
-
-  await ethers.provider.send("evm_mine", []);
+  await networkHelpers.time.increase(5 * 60);
+  await networkHelpers.mine();
 
   await expect(
   ticket.connect(owner).mintTicket(alice.address, 0, 100)
