@@ -1,0 +1,15 @@
+{
+  "name": "Ticket Web3 — VIP",
+  "description": "Système de tickets d’événements numériques",
+  "image": "ipfs://bafkreif5onfzogoyxjamu5vx4anz2enxxj33pzq3pjo7pp4l3qxepizbp4",
+  "attributes": [
+    {
+      "trait_type": "Classe",
+      "value": "VIP"
+    },
+    {
+      "trait_type": "Zone",
+      "value": "Accès Prioritaire"
+    }
+  ]
+}
