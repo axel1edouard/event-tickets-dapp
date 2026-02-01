@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-const URI = "ipfs://TEST_CID";
+const URI = "ipfs://bafkreifilrx2wp7uygffeoygkkkhxwkziuhb5blud5hqjo4zcbfamdsvoe";
 
 describe("TicketNFT - Tests métiers", function () {
   async function deployFixture() {
